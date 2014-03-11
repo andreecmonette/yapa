@@ -34,7 +34,7 @@ var pegCols = 12;
 var pegs = [];
 var timestepUpdate = new THREE.Vector3(1,0,0)
 var delta = 1/60;
-var damping = 1.1;
+var damping = .85;
 
 for (var i = 0; i < pegRows; i++) {
   shiftedRight = !shiftedRight;
@@ -55,7 +55,7 @@ var movers = [];
 
 var sphere = new THREE.Mesh(ballGeom, ballMaterial);
 sphere.radius = sphRad;
-sphere.position = new THREE.Vector3(0,5,0);
+sphere.position = new THREE.Vector3(0,15,0);
 sphere.velocity = new THREE.Vector3(0.01,-5,0);
 sphere.acceleration = new THREE.Vector3(0,-8.3,0);
 
@@ -73,7 +73,7 @@ var tryMove = function(mover) {
   mover.position.add(tempVel.multiplyScalar(delta)).add(tempAcc.multiplyScalar(.5*delta));
   checkCollisions(mover, pegs);
 }
-var collision = 0;
+//var collision = 0;
 var checkCollisions = function(movobject, targets) {
   for (target in targets) {
     var displacementVector = movobject.position.clone().sub(targets[target].position);
@@ -81,7 +81,7 @@ var checkCollisions = function(movobject, targets) {
     if (excess > 0) {
       movobject.velocity.reflect(displacementVector.normalize()).multiplyScalar(damping);
       movobject.position.add(displacementVector.setLength(excess));
-      collision = collision + 1;
+      //collision = collision + 1;
     }
   }
   // ^ naive implementation
