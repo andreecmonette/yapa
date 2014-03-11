@@ -22,72 +22,66 @@ renderer.setClearColor(0xccbbcc, 1);
 document.body.appendChild(renderer.domElement);
 var yScale = 1;
 var xScale = 1;
-var pegsGeom = new THREE.CylinderGeometry(.1, .1, 1, 8);
+var cylRad = .1;
+var sphRad = .3;
+var pegsGeom = new THREE.CylinderGeometry(cylRad, cylRad, 1, 8);
 var pegMaterial = new THREE.MeshBasicMaterial( {color: 0x111111} );
-var ballGeom = new THREE.SphereGeometry(.4, 16, 16);
+var ballGeom = new THREE.SphereGeometry(sphRad, 16, 16);
 var ballMaterial = new THREE.MeshBasicMaterial( {color: 0x333333} );
 var shiftedRight = true;
 var pegRows = 30;
 var pegCols = 12;
 var pegs = [];
-var pegPositions = [];
 var timestepUpdate = new THREE.Vector3(1,0,0)
 var delta = 1/60;
+var damping = 1.1;
 
 for (var i = 0; i < pegRows; i++) {
   shiftedRight = !shiftedRight;
   for (var j = 0; j < pegCols; j++) {
     var peg = new THREE.Mesh(pegsGeom, pegMaterial);
-    peg.radius = .1;
+    peg.radius = cylRad;
     peg.position.y = (i-pegRows/2)*yScale;
     peg.position.x = (j+(shiftedRight-.5-pegCols)/2)*xScale;
     peg.rotation.x = Math.PI/2;
     scene.add(peg);
     pegs[i+j*pegRows] = peg;
-    pegPositions[i+j*pegRows] = new THREE.Vector2(peg.position.x, peg.position.y); 
   }
 }
 
-var updateMatrix = new THREE.Matrix4(1,     0,     0,     0,
-                                     delta, 1,     0,     0,
-                                     0,     delta, 1,     0,
-                                     0,     0,     0,     1);
 var movers = [];
 
-var physicsSphere = function(material,radius) {
-  var thisSphere = new THREE.Mesh(radius, 12, 12);
-  thisSphere.radius = radius;
-}
+
 
 var sphere = new THREE.Mesh(ballGeom, ballMaterial);
+sphere.radius = sphRad;
+sphere.position = new THREE.Vector3(0,5,0);
+sphere.velocity = new THREE.Vector3(0.01,-5,0);
+sphere.acceleration = new THREE.Vector3(0,-8.3,0);
 
-                                  -5,  3,  -5,   0,
-                                  0,   0,   0,   0,
-                                  0,   0,   0,   1);
+
+
 movers.push(sphere);
 // click, make a ball!
 scene.add(sphere);
 //
-console.log(sphere.motion.multiply(updateMatrix));
 var tryMove = function(mover) {
   //console.log(mover.motion.elements);
-  mover.position.set(mover.motion.elements[0], mover.motion.elements[1], mover.motion.elements[2]);
-  mover.motion.multiply(updateMatrix);
+  var tempAcc = mover.acceleration.clone();
+  var tempVel = mover.velocity.clone();
+  mover.velocity.add(tempAcc.multiplyScalar(delta));
+  mover.position.add(tempVel.multiplyScalar(delta)).add(tempAcc.multiplyScalar(.5*delta));
+  checkCollisions(mover, pegs);
 }
-
-var physics = function(movers) {
-  for (move in movers) {
-    tryMove(movers[move]);
-  }  
-}
-
-var checkCollisions = function(object, targets) {
+var collision = 0;
+var checkCollisions = function(movobject, targets) {
   for (target in targets) {
-    if (Math.pow(object.radius + targets[target].radius, 2) < object.position.distanceToSquared(targets[target].position)) {
-      var normalForce = new THREE.Vector3(0,0,0);
-      normalForce.subVectors(object.position, targets[target].position).normalize();
-      var oldVelo = new THREE.Vector3(object.motion.elements[4], object.motion.elements[5], objects.motion.elements[6]);
-      oldVelo.
+    var displacementVector = movobject.position.clone().sub(targets[target].position);
+    var excess = movobject.radius + targets[target].radius - displacementVector.length();
+    if (excess > 0) {
+      movobject.velocity.reflect(displacementVector.normalize()).multiplyScalar(damping);
+      movobject.position.add(displacementVector.setLength(excess));
+      collision = collision + 1;
     }
   }
   // ^ naive implementation
@@ -95,8 +89,13 @@ var checkCollisions = function(object, targets) {
   // TODO: actual event-based collision detection
   // given two vectors, one can create a parametrized distance function between them
   // deterministic 
-}  
+}
 
+var physics = function(movers) {
+  for (move in movers) {
+    tryMove(movers[move]);
+  }  
+}
 
 var render = function() {
   requestAnimationFrame(render);
