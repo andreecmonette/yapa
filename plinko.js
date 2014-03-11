@@ -31,11 +31,14 @@ var pegRows = 30;
 var pegCols = 12;
 var pegs = [];
 var pegPositions = [];
+var timestepUpdate = new THREE.Vector3(1,0,0)
+var delta = 1/60;
 
 for (var i = 0; i < pegRows; i++) {
   shiftedRight = !shiftedRight;
   for (var j = 0; j < pegCols; j++) {
     var peg = new THREE.Mesh(pegsGeom, pegMaterial);
+    peg.radius = .1;
     peg.position.y = (i-pegRows/2)*yScale;
     peg.position.x = (j+(shiftedRight-.5-pegCols)/2)*xScale;
     peg.rotation.x = Math.PI/2;
@@ -45,36 +48,60 @@ for (var i = 0; i < pegRows; i++) {
   }
 }
 
+var updateMatrix = new THREE.Matrix4(1,     0,     0,     0,
+                                     delta, 1,     0,     0,
+                                     0,     delta, 1,     0,
+                                     0,     0,     0,     1);
 var movers = [];
 
+var physicsSphere = function(material,radius) {
+  var thisSphere = new THREE.Mesh(radius, 12, 12);
+  thisSphere.radius = radius;
+}
+
 var sphere = new THREE.Mesh(ballGeom, ballMaterial);
-sphere.velocity = new THREE.Vector2(0.01, 0.01);
+
+                                  -5,  3,  -5,   0,
+                                  0,   0,   0,   0,
+                                  0,   0,   0,   1);
 movers.push(sphere);
 // click, make a ball!
 scene.add(sphere);
 //
-function tryMove(mover) {
-  mover.position.x += mover.velocity.x;
-  mover.position.y += mover.velocity.y;
+console.log(sphere.motion.multiply(updateMatrix));
+var tryMove = function(mover) {
+  //console.log(mover.motion.elements);
+  mover.position.set(mover.motion.elements[0], mover.motion.elements[1], mover.motion.elements[2]);
+  mover.motion.multiply(updateMatrix);
 }
 
-function physics(movers) {
+var physics = function(movers) {
   for (move in movers) {
     tryMove(movers[move]);
-
   }  
 }
 
-function checkCollisions(object, targets) {
+var checkCollisions = function(object, targets) {
+  for (target in targets) {
+    if (Math.pow(object.radius + targets[target].radius, 2) < object.position.distanceToSquared(targets[target].position)) {
+      var normalForce = new THREE.Vector3(0,0,0);
+      normalForce.subVectors(object.position, targets[target].position).normalize();
+      var oldVelo = new THREE.Vector3(object.motion.elements[4], object.motion.elements[5], objects.motion.elements[6]);
+      oldVelo.
+    }
+  }
+  // ^ naive implementation
+  // TODO: oct-tree
+  // TODO: actual event-based collision detection
   // given two vectors, one can create a parametrized distance function between them
   // deterministic 
 }  
 
 
-function render() {
-  physics(movers);
+var render = function() {
   requestAnimationFrame(render);
   renderer.render(scene, camera);
+  physics(movers);
 }
 
 render();
