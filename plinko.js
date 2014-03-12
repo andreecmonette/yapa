@@ -52,19 +52,21 @@ for (var i = 0; i < pegRows; i++) {
 var movers = [];
 
 
+var createSphere = function() {
+  var sphere = new THREE.Mesh(ballGeom, ballMaterial);
+  sphere.radius = sphRad;
+  sphere.position = new THREE.Vector3(0,15,0);
+  sphere.velocity = new THREE.Vector3(0.01,-5,0);
+  sphere.acceleration = new THREE.Vector3(0,-8.3,0);
+  movers.push(sphere);
+  // click, make a ball!
+  scene.add(sphere);
+  //
 
-var sphere = new THREE.Mesh(ballGeom, ballMaterial);
-sphere.radius = sphRad;
-sphere.position = new THREE.Vector3(0,15,0);
-sphere.velocity = new THREE.Vector3(0.01,-5,0);
-sphere.acceleration = new THREE.Vector3(0,-8.3,0);
+}
+renderer.domElement.onclick(createSphere);
 
 
-
-movers.push(sphere);
-// click, make a ball!
-scene.add(sphere);
-//
 var tryMove = function(mover) {
   //console.log(mover.motion.elements);
   var tempAcc = mover.acceleration.clone();
