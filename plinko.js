@@ -55,7 +55,7 @@ var movers = [];
 var createSphere = function() {
   var sphere = new THREE.Mesh(ballGeom, ballMaterial);
   sphere.radius = sphRad;
-  sphere.position = new THREE.Vector3(0,15,0);
+  sphere.position = new THREE.Vector3(Math.random(),15,0);
   sphere.velocity = new THREE.Vector3(0.01,-5,0);
   sphere.acceleration = new THREE.Vector3(0,-8.3,0);
   movers.push(sphere);
@@ -64,7 +64,7 @@ var createSphere = function() {
   //
 
 }
-renderer.domElement.onclick(createSphere);
+renderer.domElement.onclick = createSphere;
 
 
 var tryMove = function(mover) {
@@ -73,14 +73,14 @@ var tryMove = function(mover) {
   var tempVel = mover.velocity.clone();
   mover.velocity.add(tempAcc.multiplyScalar(delta));
   mover.position.add(tempVel.multiplyScalar(delta)).add(tempAcc.multiplyScalar(.5*delta));
-  checkCollisions(mover, pegs);
+  checkCollisions(mover, movers.concat(pegs));
 }
 //var collision = 0;
 var checkCollisions = function(movobject, targets) {
   for (target in targets) {
     var displacementVector = movobject.position.clone().sub(targets[target].position);
     var excess = movobject.radius + targets[target].radius - displacementVector.length();
-    if (excess > 0) {
+    if (excess > 0 && displacementVector.length() >0)  {
       movobject.velocity.reflect(displacementVector.normalize()).multiplyScalar(damping);
       movobject.position.add(displacementVector.setLength(excess));
       //collision = collision + 1;
