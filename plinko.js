@@ -25,9 +25,9 @@ var xScale = 1;
 var cylRad = .1;
 var sphRad = .3;
 var pegsGeom = new THREE.CylinderGeometry(cylRad, cylRad, 1, 8);
-var pegMaterial = new THREE.MeshBasicMaterial( {color: 0x111111} );
+var pegMaterial = new THREE.MeshPhongMaterial( {color: 0x212121, ambient: 0x030303, specular: 0x009900, shininess: 30, shading: THREE.SmoothShading } );
 var ballGeom = new THREE.SphereGeometry(sphRad, 16, 16);
-var ballMaterial = new THREE.MeshBasicMaterial( {color: 0x333333} );
+var ballMaterial = new THREE.MeshPhongMaterial( {color: 0x333333, shading: THREE.SmoothShading} );
 var shiftedRight = true;
 var pegRows = 30;
 var pegCols = 12;
@@ -35,6 +35,12 @@ var pegs = [];
 var timestepUpdate = new THREE.Vector3(1,0,0)
 var delta = 1/60;
 var damping = .85;
+
+var ambientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
+scene.add( ambientLight );
+var light = new THREE.DirectionalLight( 0xffffff, 1 );
+light.position.set( .1, 1, .1 );
+scene.add( light );
 
 for (var i = 0; i < pegRows; i++) {
   shiftedRight = !shiftedRight;
@@ -83,9 +89,13 @@ var checkCollisions = function(movobject, targets) {
     if (excess > 0 && displacementVector.length() >0)  {
       movobject.velocity.reflect(displacementVector.normalize()).multiplyScalar(damping);
       movobject.position.add(displacementVector.setLength(excess));
+      targets[target].materials
       //collision = collision + 1;
     }
   }
+  //
+  
+  
   // ^ naive implementation
   // TODO: oct-tree
   // TODO: actual event-based collision detection
